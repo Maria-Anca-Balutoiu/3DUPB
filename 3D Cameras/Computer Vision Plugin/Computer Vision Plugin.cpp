@@ -316,5 +316,6 @@ void FeatureDetection()
 
 int main()
 {
+	FeatureDetection();
 	return 0;
 }
