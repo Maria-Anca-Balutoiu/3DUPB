@@ -136,7 +136,7 @@ public class MeasureDistances : MonoBehaviour
                     + (points[points.Count - 2].transform.position.x
                     - points[points.Count - 1].transform.position.x) / 2,
                     0, 0);
-                /* TODO 1.3 Set rotation: use LookAt function to make the line oriented between the two points
+                /* TODO 1.3 Set rotation: use LookAt function to make the line oriented between the two points */
                 
                 /* TODO 1.4 Set scale: two fixed numbers on ox and oy axis, the distance between the two points on oz axis */
                 line.transform.localScale = new Vector3(0.5f, 0.5f, 0.0f); /* !0.5 can be changed to whatever value we want
