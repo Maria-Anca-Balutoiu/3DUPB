@@ -6,8 +6,9 @@
 #define EXPORT_API // XCode does not need annotating exported functions, so define is empty
 #endif
 
-#include "opencv2/core.hpp"
+#include <fstream>
 #include <opencv2/opencv.hpp>
+#include "opencv2/core.hpp"
 #include <opencv2/calib3d/calib3d.hpp>
 #include "opencv2/xfeatures2d.hpp"
 #include "opencv2/highgui.hpp"
@@ -52,7 +53,8 @@ extern "C"
 
 	// The functions we will call from Unity.
 	//
-	void transform(const cv::Point3d& pt, const cv::Mat& rvec, const cv::Mat& tvec, cv::Point3d& ptTrans) {
+	void transform(const cv::Point3d& pt, const cv::Mat& rvec, const cv::Mat& tvec, cv::Point3d& ptTrans)
+	{
 		cv::Mat R;
 		cv::Rodrigues(rvec, R);
 
@@ -63,8 +65,10 @@ extern "C"
 		ptTrans.z = matPtTrans.at<double>(2, 0);
 	}
 
-	void recoverPoseFromPnP(const std::vector<cv::Point3d>& objectPoints1, const cv::Mat& rvec1, const cv::Mat& tvec1, const std::vector<cv::Point2d>& imagePoints2,
-		const cv::Mat& cameraMatrix, cv::Mat& rvec1to2, cv::Mat& tvec1to2) {
+	void recoverPoseFromPnP(const std::vector<cv::Point3d>& objectPoints1, const cv::Mat& rvec1, 
+							const cv::Mat& tvec1, const std::vector<cv::Point2d>& imagePoints2,
+							const cv::Mat& cameraMatrix, cv::Mat& rvec1to2, cv::Mat& tvec1to2)
+	{
 		cv::Mat R1;
 		cv::Rodrigues(rvec1, R1);
 
@@ -79,7 +83,8 @@ extern "C"
 		cv::solvePnPRansac(objectPoints1InCam, imagePoints2, cameraMatrix, cv::noArray(), rvec1to2, tvec1to2, false, cv::SOLVEPNP_ITERATIVE);
 	}
 
-	EXPORT_API void PNP(Vector3 position1, Vector4 rotation1, Matrix cameraIntrinsics, Vector3 points3DUnity[8], Vector2 points2DUnity[8], Vector3 position2[1], Vector4 rotation2[1])
+	EXPORT_API void PNP(Vector3 position1, Vector4 rotation1, Matrix cameraIntrinsics, Vector3 points3DUnity[8], Vector2 points2DUnity[8], 
+						Vector3 position2[1], Vector4 rotation2[1])
 	{
 		/* Quaternion to rotation matrix */
 		/* TODO 2.1.1 Create quaternion from input data */
@@ -146,11 +151,9 @@ void DetectorFLANNSift(cv::Mat image1, cv::Mat image2, std::ofstream& measure)
 	std::vector<cv::DMatch> good_matches;
 
 	const float ratio_thresh = 0.75f;
-
 	/* SIFT detector */
 	/* TODO 1.2.1 Intialize SIFT detector */
 	/* TODO 1.2.2 Detect keypoints and descriptors in both images */
-
 	/* TODO 1.6.1 Compute execution time of SIFT */
 	auto durationSift = 0;
 
@@ -158,11 +161,16 @@ void DetectorFLANNSift(cv::Mat image1, cv::Mat image2, std::ofstream& measure)
 	measure << "SIFT detectors execution time: " << durationSift << std::endl;
 	measure << "SIFT detected " << keypoints1.size() << " and " << keypoints2.size() << " keypoints" << std::endl;
 
+	/* Save output image */
+	cv::Mat output;
+	cv::drawKeypoints(image1, keypoints1, output);
+	cv::imwrite("SIFT.jpg", output);
+
 	/* FLANNMatcher */
 	/* TODO 1.3.1 Initialize FLANN Matcher */
 	/* TODO 1.3.2 Use knnMatch to match feature points in the two images */
 	/* TODO 1.3.3 Filter the matches using Lowe's ratio test. Save the result in good_matches */
-
+	
 	/* TODO 1.6.3 Compute execution time of FLANN */
 	auto durationFlann = 0;
 
@@ -195,7 +203,6 @@ void DetectorBFSift(cv::Mat image1, cv::Mat image2, std::ofstream& measure)
 	/* SIFT detector */
 	/* TODO 1.2.1 Intialize SIFT detector */
 	/* TODO 1.2.2 Detect keypoints and descriptors in both images */
-
 	/* TODO 1.6.1 Compute execution time of SIFT */
 	auto durationSift = 0;
 
@@ -206,7 +213,6 @@ void DetectorBFSift(cv::Mat image1, cv::Mat image2, std::ofstream& measure)
 	/* BFMatcher */
 	/* TODO 1.4.1 Initialize BFMatcher */
 	/* TODO 1.4.2 Match the feature points in the two images */
-
 	/* Save in good_matches the best 20 results */
 	sort(begin(matches), end(matches), [](cv::DMatch a, cv::DMatch b) { return a.distance < b.distance; });
 
@@ -252,7 +258,6 @@ void DetectorBFOrb(cv::Mat image1, cv::Mat image2, std::ofstream& measure)
 	/* ORB detector */
 	/* TODO 1.5.1 Intialize ORB detector */
 	/* TODO 1.5.2 Detect keypoints and descriptors in both images */
-
 	/* TODO 1.6.2 Compute execution time of ORB */
 	auto durationOrb = 0;
 
@@ -260,10 +265,14 @@ void DetectorBFOrb(cv::Mat image1, cv::Mat image2, std::ofstream& measure)
 	measure << "ORB detectors execution time: " << durationOrb << std::endl;
 	measure << "ORB detected " << keypoints1.size() << " and " << keypoints2.size() << " keypoints" << std::endl;
 
+	/* Save output image */
+	cv::Mat output;
+	cv::drawKeypoints(image1, keypoints1, output);
+	cv::imwrite("ORB.jpg", output);
+
 	/* BFMatcher */
 	/* TODO 1.4.1 Initialize BFMatcher */
 	/* TODO 1.4.2 Match the feature points in the two images */
-
 	/* Save in good_matches the best 20 results */
 	sort(begin(matches), end(matches), [](cv::DMatch a, cv::DMatch b) { return a.distance < b.distance; });
 
@@ -308,9 +317,15 @@ void FeatureDetection()
 	/* Detect feature points with SIFT. Match feature points with BF */
 	DetectorBFSift(image1, image2, measure);
 
-	/* Detect feature points with ORB. Match feature points with BF */
+	/* Detect feature points with ORB. Match feature points with BF.
+	 * What would happen if we tried to match ORB detected feature points using FLANN?
+	 */
 	DetectorBFOrb(image1, image2, measure);
 
+	/* TODO 1.7 Implement the following keypoints detectors and descriptors extractors: 
+	 * SURF, FAST, STAR, BRISK, GFTT, KAZE, AKAZE
+	 */
+	
 	measure.close();
 }
 
